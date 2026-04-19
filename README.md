@@ -1,3 +1,5 @@
+![Visitors](https://visitor-badge.laobi.icu/badge?page_id=rijwanul.youtube-playlist-planner)
+
 # Youtube Playlist Planner
 
 **Youtube Playlist Planner for Study, Research or Exploration**
