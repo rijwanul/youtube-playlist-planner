@@ -43,12 +43,16 @@
                 </label>
             </div>
 
-            <div class="action-row">
-                <button id="fetchBtn" class="btn btn-primary" type="button">Fetch Video(s)</button>
-                <button id="importBtnTop" class="btn btn-subtle" type="button">Import</button>
-                <button id="clearBtn" class="btn btn-subtle" type="button">Clear All</button>
-                <p id="statusText" class="status-text">Ready.</p>
-            </div>
+                        <div class="action-row">
+                                <button id="fetchBtn" class="btn btn-primary" type="button">Fetch Video(s)</button>
+                                <button id="importBtnTop" class="btn btn-subtle" type="button">Import</button>
+                                <button id="clearBtn" class="btn btn-subtle" type="button">Clear All</button>
+                                <p id="statusText" class="status-text">Ready.
+                                    <span id="tryExampleTip" class="try-example-tip" style="display:none;margin-left:1em;font-size:0.98em;">
+                                        Want to try without providing an API key? <a href="#" id="importExampleLink">Import this example playlist</a>.
+                                    </span>
+                                </p>
+                        </div>
         </section>
 
         <section id="dashboard" class="dashboard hidden">
@@ -254,6 +258,9 @@
         <div class="empty-state">
             <h3>No videos in this tab</h3>
             <p>Switch tabs or fetch a playlist to continue.</p>
+            <div id="emptyExampleTip" class="try-example-tip" style="margin-top:1em;">
+              <span>Want to try without providing an API key? <a href="#" id="importExampleLinkEmpty">Import this example playlist</a>.</span>
+            </div>
         </div>
     </template>
 

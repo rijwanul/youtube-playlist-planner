@@ -48,6 +48,10 @@ const refs = {
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
     importFileInput: document.getElementById("importFileInput"),
+    tryExampleTip: document.getElementById("tryExampleTip"),
+    importExampleLink: document.getElementById("importExampleLink"),
+    emptyExampleTip: null, // will be set after DOMContentLoaded
+    importExampleLinkEmpty: null, // will be set after DOMContentLoaded
     yetTabBtn: document.getElementById("yetTabBtn"),
     watchedTabBtn: document.getElementById("watchedTabBtn"),
     yetCount: document.getElementById("yetCount"),
@@ -99,6 +103,39 @@ init();
 async function init() {
     loadState();
     bindEvents();
+    setupExampleImportLinks();
+    function setupExampleImportLinks() {
+        // For the top tip beside Ready.
+        if (refs.tryExampleTip && refs.importExampleLink) {
+            refs.importExampleLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                importExamplePlaylist();
+            });
+        }
+        // For the empty state tip
+        document.addEventListener("DOMContentLoaded", () => {
+            refs.emptyExampleTip = document.getElementById("emptyExampleTip");
+            refs.importExampleLinkEmpty = document.getElementById("importExampleLinkEmpty");
+            if (refs.importExampleLinkEmpty) {
+                refs.importExampleLinkEmpty.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    importExamplePlaylist();
+                });
+            }
+        });
+    }
+
+    async function importExamplePlaylist() {
+        try {
+            const response = await fetch("example-import.json");
+            if (!response.ok) throw new Error("Failed to load example playlist.");
+            const data = await response.json();
+            await applyImportedData(data);
+            setStatus("Example playlist imported!");
+        } catch (err) {
+            setStatus("Could not import example playlist.");
+        }
+    }
     hydrateInputs();
     render();
     startRealtimeEtaTicker();
@@ -974,8 +1011,13 @@ function reorderManualByIds(draggedId, targetId) {
 
 function render() {
     const hasVideos = state.videos.length > 0;
+
     refs.dashboard.classList.toggle("hidden", !hasVideos);
     refs.importBtnTop.classList.toggle("hidden", hasVideos);
+    // Show the top tip only if empty
+    if (refs.tryExampleTip) {
+        refs.tryExampleTip.style.display = hasVideos ? "none" : "inline";
+    }
 
     refs.yetTabBtn.classList.toggle("active", state.currentTab === "yet-to-watch");
     refs.watchedTabBtn.classList.toggle("active", state.currentTab === "watched");
@@ -1031,7 +1073,20 @@ function renderVideoList() {
     refs.videoList.innerHTML = "";
 
     if (list.length === 0) {
-        refs.videoList.appendChild(refs.emptyStateTemplate.content.cloneNode(true));
+        // Render empty state and re-bind the example import link
+        refs.videoList.innerHTML = "";
+        const emptyFrag = refs.emptyStateTemplate.content.cloneNode(true);
+        // After insertion, re-bind the link
+        setTimeout(() => {
+            const link = document.getElementById("importExampleLinkEmpty");
+            if (link) {
+                link.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    importExamplePlaylist();
+                });
+            }
+        }, 0);
+        refs.videoList.appendChild(emptyFrag);
         return;
     }
 
