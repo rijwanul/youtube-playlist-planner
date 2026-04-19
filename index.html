@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube Playlist Planner</title>
+    <meta name="description" content="Youtube Playlist Planner for Study, Research or Exploration. Plan, track, and finish YouTube playlists efficiently for learning, research, or deep exploration.">
+    <meta property="og:title" content="Youtube Playlist Planner">
+    <meta property="og:description" content="Youtube Playlist Planner for Study, Research or Exploration. Plan, track, and finish YouTube playlists efficiently for learning, research, or deep exploration.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://youtube-playlist-planner.netlify.app/">
+    <meta property="og:image" content="https://youtube-playlist-planner.netlify.app/favicon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Youtube Playlist Planner">
+    <meta name="twitter:description" content="Youtube Playlist Planner for Study, Research or Exploration.">
+    <meta name="twitter:image" content="https://youtube-playlist-planner.netlify.app/favicon.png">
+    <link rel="canonical" href="https://youtube-playlist-planner.netlify.app/">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="aurora aurora-one"></div>
+    <div class="aurora aurora-two"></div>
+
+    <main class="app-shell">
+        <section class="hero-card">
+            <p class="eyebrow">Youtube Playlist Planner</p>
+            <h1>Youtube Playlist Planner for Study, Research or Exploration</h1>
+            <p class="hero-subtitle">Plan, track, and finish YouTube playlists efficiently for learning, research, or deep exploration.</p>
+
+            <div class="input-grid">
+                <label class="field">
+                    <span>Playlist or Video Link/ID</span>
+                    <input type="text" id="playlistId" placeholder="Playlist/video links or IDs (comma separated supported)">
+                    <small class="field-hint">Tip: You can fetch and add multiple playlists/videos at once using comma-separated links or IDs.</small>
+                </label>
+                <label class="field">
+                    <span class="label-with-help">YouTube Data API Key <button id="apiHelpBtn" class="help-icon-btn" type="button" aria-label="How to get API key">?</button></span>
+                    <input type="password" id="apiKey" placeholder="Paste your API key">
+                </label>
+            </div>
+
+            <div class="action-row">
+                <button id="fetchBtn" class="btn btn-primary" type="button">Fetch Video(s)</button>
+                <button id="importBtnTop" class="btn btn-subtle" type="button">Import</button>
+                <button id="clearBtn" class="btn btn-subtle" type="button">Clear All</button>
+                <p id="statusText" class="status-text">Ready.</p>
+            </div>
+        </section>
+
+        <section id="dashboard" class="dashboard hidden">
+            <div class="stats-grid">
+                <article class="stat-card">
+                    <p>Total Playlist Length</p>
+                    <h2 id="total-time">0m</h2>
+                </article>
+                <article class="stat-card stat-accent">
+                    <p>Yet to Watch</p>
+                    <h2 id="remaining-time">0m</h2>
+                </article>
+                <article class="stat-card">
+                    <p>Watched</p>
+                    <h2 id="watched-time">0m</h2>
+                </article>
+            </div>
+
+            <div class="plan-controls">
+                <label class="inline-setting" for="speedOption">
+                    Watch Speed
+                    <select id="speedOption">
+                        <option value="1">1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="1.75">1.75x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </label>
+
+                <label class="inline-setting" for="bufferMinutes">
+                    Buffer (minutes)
+                    <input id="bufferMinutes" type="number" min="0" step="5" value="0" placeholder="0">
+                </label>
+
+                <label class="inline-setting" for="startTime">
+                    Start Watching From (optional)
+                    <span class="time-input-wrap">
+                        <input id="startTime" type="time">
+                        <button id="clearStartTimeBtn" class="mini-action-btn" type="button">Clear</button>
+                    </span>
+                </label>
+
+                <article class="stat-card plan-finish-card">
+                    <p>Finish By</p>
+                    <h2 id="finish-by-time">--:--</h2>
+                </article>
+
+                <div class="portability-tools">
+                    <div class="portability-actions">
+                        <button id="exportBtn" class="btn btn-subtle" type="button">Export</button>
+                        <button id="importBtn" class="btn btn-subtle" type="button">Import</button>
+                    </div>
+                    <input id="importFileInput" type="file" accept="application/json" class="hidden" />
+                </div>
+            </div>
+
+            <p id="planHint" class="plan-hint">ETA includes remaining watch time, selected speed, and buffer.</p>
+
+            <div id="motivation-msg" class="motivation" aria-live="polite"></div>
+
+            <div id="playerDock" class="player-dock hidden"></div>
+
+            <div class="controls-wrap">
+                <div class="tabs" role="tablist" aria-label="Video tabs">
+                    <button id="yetTabBtn" class="tab active" type="button" data-tab="yet-to-watch">
+                        Yet to Watch <span id="yetCount" class="chip">0</span>
+                    </button>
+                    <button id="watchedTabBtn" class="tab" type="button" data-tab="watched">
+                        Watched <span id="watchedCount" class="chip">0</span>
+                    </button>
+                </div>
+
+                <label class="sequence-picker" for="sortOrder">
+                    Sequence
+                    <select id="sortOrder">
+                        <option value="normal">Normal</option>
+                        <option value="reverse">Reverse</option>
+                        <option value="manual">Manual</option>
+                    </select>
+                </label>
+            </div>
+
+            <div id="video-list" class="video-list"></div>
+        </section>
+    </main>
+
+    <section id="playerModal" class="player-modal hidden" aria-hidden="true">
+        <div id="playerBackdrop" class="player-backdrop"></div>
+        <article class="player-card" role="dialog" aria-modal="true" aria-label="Video player">
+            <header class="player-head">
+                <div>
+                    <p class="player-kicker">Now Playing</p>
+                    <p id="playerRemainingTiny" class="player-mini">Yet to watch: 0m</p>
+                    <p id="playerFinishTiny" class="player-mini">Finish by: --:--</p>
+                    <h3 id="playerTitle">Video title</h3>
+                </div>
+                <button id="closePlayerBtn" class="close-player-btn" type="button" aria-label="Close player">x</button>
+            </header>
+
+            <div class="player-frame-wrap">
+                <iframe
+                    id="playerFrame"
+                    class="player-frame"
+                    src=""
+                    title="YouTube video player"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen
+                ></iframe>
+            </div>
+
+            <footer class="player-controls">
+                <button id="prevVideoBtn" class="btn btn-subtle" type="button">Previous Video</button>
+                <button id="markDoneBtn" class="btn btn-primary" type="button">Mark as Completed</button>
+                <button id="nextVideoBtn" class="btn btn-subtle" type="button">Next Video</button>
+                <button id="largeScreenBtn" class="btn btn-subtle" type="button">Large Screen</button>
+                <button id="popModeBtn" class="btn btn-subtle" type="button">Pop-into UI</button>
+            </footer>
+        </article>
+    </section>
+
+    <section id="clearConfirmModal" class="quick-modal hidden" aria-hidden="true">
+        <div id="clearConfirmBackdrop" class="quick-backdrop"></div>
+        <article class="quick-card" role="dialog" aria-modal="true" aria-label="Confirm clear all">
+            <header class="quick-head">
+                <h3>Clear all playlist data?</h3>
+                <button id="closeClearConfirmBtn" class="close-player-btn" type="button" aria-label="Close clear dialog">x</button>
+            </header>
+            <p class="help-note">This removes all videos and settings stored in this tracker.</p>
+            <div class="merge-actions">
+                <button id="confirmClearBtn" class="btn btn-primary" type="button">Yes, Clear All</button>
+                <button id="cancelClearBtn" class="btn btn-subtle" type="button">Cancel</button>
+            </div>
+        </article>
+    </section>
+
+    <section id="mergeModal" class="quick-modal hidden" aria-hidden="true">
+        <div id="mergeBackdrop" class="quick-backdrop"></div>
+        <article class="quick-card" role="dialog" aria-modal="true" aria-label="Merge options">
+            <header class="quick-head">
+                <h3>Existing videos found</h3>
+                <button id="closeMergeBtn" class="close-player-btn" type="button" aria-label="Close merge options">x</button>
+            </header>
+            <p class="help-note">Choose how to place incoming videos.</p>
+            <div class="merge-actions">
+                <button id="mergeReplaceBtn" class="btn btn-primary" type="button">Replace Existing Playlist</button>
+                <button id="mergeBottomBtn" class="btn btn-subtle" type="button">Add to the Bottom</button>
+                <button id="mergeTopBtn" class="btn btn-subtle" type="button">Add to the Top</button>
+            </div>
+        </article>
+    </section>
+
+    <section id="helpModal" class="quick-modal hidden" aria-hidden="true">
+        <div id="helpBackdrop" class="quick-backdrop"></div>
+        <article class="quick-card" role="dialog" aria-modal="true" aria-label="API key help">
+            <header class="quick-head">
+                <h3>Generate YouTube Data API Key</h3>
+                <button id="closeHelpBtn" class="close-player-btn" type="button" aria-label="Close help">x</button>
+            </header>
+            <ol class="help-steps">
+                <li>Open <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>.</li>
+                <li><a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Create</a> or select a project.</li>
+                <li>Enable <a href="https://console.cloud.google.com/marketplace/product/google/youtube.googleapis.com" target="_blank" rel="noopener noreferrer">YouTube Data API v3</a>.</li>
+                <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Credentials</a> and click Create Credentials, then API key.</li>
+                <li>Copy key and optionally restrict it for safety.</li>
+                <li>Paste it in this app and fetch videos.</li>
+            </ol>
+            <p class="help-note">Security tip: Restrict the key by HTTP referrer and YouTube Data API v3 scope.</p>
+        </article>
+    </section>
+
+    <section id="completeModal" class="quick-modal hidden" aria-hidden="true">
+        <div id="completeBackdrop" class="quick-backdrop"></div>
+        <article class="quick-card completion-card" role="dialog" aria-modal="true" aria-label="Completion message">
+            <div class="big-tick">✓</div>
+            <h3>Great job!</h3>
+            <p id="completeText">Video marked as completed.</p>
+            <button id="closeCompleteBtn" class="btn btn-primary" type="button">Continue</button>
+        </article>
+    </section>
+
+    <section id="exportModal" class="quick-modal hidden" aria-hidden="true">
+        <div id="exportBackdrop" class="quick-backdrop"></div>
+        <article class="quick-card" role="dialog" aria-modal="true" aria-label="Export options">
+            <header class="quick-head">
+                <h3>Export Options</h3>
+                <button id="closeExportBtn" class="close-player-btn" type="button" aria-label="Close export options">x</button>
+            </header>
+            <label class="export-option">
+                <input id="exportIncludeApiKey" type="checkbox" checked>
+                Include API key in exported file
+            </label>
+            <p class="help-note">Only enable this if you trust the destination where the file will be stored.</p>
+            <div class="merge-actions">
+                <button id="confirmExportBtn" class="btn btn-primary" type="button">Export</button>
+                <button id="cancelExportBtn" class="btn btn-subtle" type="button">Cancel</button>
+            </div>
+        </article>
+    </section>
+
+    <template id="emptyStateTemplate">
+        <div class="empty-state">
+            <h3>No videos in this tab</h3>
+            <p>Switch tabs or fetch a playlist to continue.</p>
+        </div>
+    </template>
+
+    <footer class="app-footer">
+        <p>Youtube Playlist Planner Version 0.7.0</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
